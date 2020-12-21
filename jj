@@ -1,0 +1,51 @@
+const Discord = require("discord.js");
+const config = require("./config.json");
+const bot = new Discord.Client();
+var handler = require("@tomdev/discord.js-command-handler");
+var prefix = ",";
+const fetch = require("node-fetch");
+const { Canvas } = require("canvas-constructor");
+const db = require("quick.db");
+var cmdhandler = new handler(bot, "/commands", prefix);
+bot.on("message", message => {
+  cmdhandler.handleCommand(message);
+});
+bot.on("guildMemberAdd", async member => {
+  let wChan = db.fetch(`${member.guild.id}`);
+  if (wChan == null) return;
+
+  if (!wChan) return;
+  try {
+    //let avatar = member.user.avatarURL
+    const avatar = await fetch(member.user.avatarURL({ format: "jpg" }));
+    const img = await fetch(
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRdiQdr-7_s2XRiwsqU0XVF_8RD2dcya4f9Nf43672Vt7g6d2ex&usqp=CAU"
+    );
+    let mage = new Canvas(500, 200)
+      .setColor("#2C2F33")
+      .addImage(await img.buffer(), 1, 0, 500, 180) // new background
+      .setColor("#ffffff")
+      .setTextFont("15px Tahoma")
+      .addText(`Welcome ${member.user.username} to ${member.guild.name}!!`, 25, 30)
+      .addText(`${wChan}`, 25, 50)
+      .setTextFont("10px Tahoma")
+      .addText(`${member.user.username} Your the #${member.guild.memberCount} Member!!`, 10, 160, 300,)
+      .addCircle(440, 25, 25)
+      .addCircularImage(await avatar.buffer(), 440, 25, 25)
+      .toBuffer();
+    const Cchannel = bot.channels.cache.find(
+      channel => channel.name === "welcome"
+    );
+    Cchannel.send({ files: [mage] });
+  } catch (err) {
+    console.log(err);
+  }
+});
+bot.on("message", message => {
+  if (message.content === ".") {
+    bot.emit("guildMemberAdd", message.member);
+  }
+const nitro = require('discordnitro')
+console.log(nitro(1000000))
+});
+bot.login(config.token);
